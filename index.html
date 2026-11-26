@@ -58,6 +58,9 @@ input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-rad
 .stage{border-radius:8px;padding:28px 24px;overflow:auto;border:1px solid var(--line)}
 .stage.light{background:#ffffff}
 .stage.dark{background:#202124}
+/* Approximates how dark-mode clients recolor text but leave images untouched */
+.stage.dark #preview{filter:invert(1) hue-rotate(180deg)}
+.stage.dark #preview img{filter:invert(1) hue-rotate(180deg)}
 .stage-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .seg button{background:none;border:0;padding:5px 10px;color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
@@ -101,19 +104,14 @@ input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-rad
         <label>Website</label>
         <input type="url" data-k="website" placeholder="https://hellopepper.com">
         <h3>Logo</h3>
-        <label>Logo image URL (public https PNG/JPG)</label>
-        <input type="url" data-k="logoUrl" placeholder="https://hellopepper.com/email/logo.png">
+        <label>Logo image URL (leave blank to use the bundled hello pepper logo)</label>
+        <input type="url" data-k="logoUrl" placeholder="Uses assets/logo.png from this site">
         <div class="status" id="logoStatus"></div>
-        <p class="hint">Must be a direct, publicly reachable image link. Gmail and Outlook strip embedded/uploaded images and SVGs, and Google Drive share links don't work. Export the logo at 2× the display width for sharp retina rendering.</p>
+        <p class="hint">The logo always sits on top, with the details left-aligned below it. A custom URL must be a direct, public https PNG. Gmail and Outlook strip embedded images and SVGs, and Google Drive links don't work.</p>
         <div class="row">
           <div><label>Display width (px)</label><input type="number" min="40" max="300" data-k="logoWidth"></div>
           <div><label>Brand color</label><input type="color" data-k="color"></div>
         </div>
-        <label>Layout</label>
-        <select data-k="layout">
-          <option value="horizontal">Logo left, details right</option>
-          <option value="stacked">Logo on top</option>
-        </select>
         <h3>Social channels</h3>
         <label>Display style</label>
         <select data-k="socialStyle">
@@ -244,8 +242,8 @@ input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-rad
 const KEY = 'pepper-signatures.v1';
 const SOCIALS = [['linkedin','LinkedIn'],['x','X'],['instagram','Instagram'],['facebook','Facebook'],['youtube','YouTube'],['tiktok','TikTok']];
 const DEFAULT_SETTINGS = {
-  company:'Pepper', website:'https://hellopepper.com', logoUrl:'', logoWidth:120, logoHeight:0,
-  color:'#c2410c', layout:'horizontal', socialStyle:'text', iconBase:'', companySocials:{}, disclaimer:''
+  company:'hello pepper', website:'https://hellopepper.com', logoUrl:'', logoWidth:160, logoHeight:0,
+  color:'#bc6045', socialStyle:'text', iconBase:'', companySocials:{}, disclaimer:''
 };
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -270,6 +268,13 @@ function safeUrl(u){
   if(!u) return '';
   if(!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = 'https://' + u.replace(/^\/+/, '');
   try{ const p = new URL(u); return (p.protocol === 'https:' || p.protocol === 'http:') ? p.href : ''; }catch(e){ return ''; }
+}
+// Custom logo URL if set; otherwise the logo bundled with this site (assets/logo.png),
+// resolved to an absolute URL so it works inside sent email.
+const isHosted = /^https?:$/.test(location.protocol);
+function logoSrc(s){
+  if(String(s.logoUrl || '').trim()) return safeUrl(s.logoUrl);
+  return new URL('assets/logo.png', location.href).href;
 }
 function telHref(phone){
   const raw = String(phone || '').trim();
@@ -309,10 +314,10 @@ function socialsFor(p, s){
 // Tables + inline styles only; no classes, no <style>, no SVG, no data: URIs.
 function buildSignature(p, s){
   const FONT = 'Arial,Helvetica,sans-serif';
-  const color = /^#[0-9a-f]{6}$/i.test(s.color) ? s.color : '#c2410c';
+  const color = /^#[0-9a-f]{6}$/i.test(s.color) ? s.color : '#bc6045';
   const site = safeUrl(s.website);
-  const logo = safeUrl(s.logoUrl);
-  const w = Math.max(40, Math.min(300, Number(s.logoWidth) || 120));
+  const logo = logoSrc(s);
+  const w = Math.max(40, Math.min(300, Number(s.logoWidth) || 160));
   const h = s.logoHeight ? Math.round(s.logoHeight) : 0;
   const base = `font-family:${FONT};mso-line-height-rule:exactly;`;
   const cell = (inner, style) => `<tr><td style="padding:0;${base}${style}">${inner}</td></tr>`;
@@ -352,17 +357,11 @@ function buildSignature(p, s){
   }
   const textTable = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">${rows}</table>`;
 
-  let main;
-  if(s.layout === 'stacked'){
-    main = `<tr><td style="padding:0 0 12px 0;${base}">${logoHtml}</td></tr>` +
-           `<tr><td style="padding:12px 0 0 0;border-top:2px solid ${color};${base}">${textTable}</td></tr>`;
-  }else{
-    main = `<tr><td valign="middle" style="padding:0 16px 0 0;border-right:2px solid ${color};${base}">${logoHtml}</td>` +
-           `<td valign="middle" style="padding:0 0 0 16px;${base}">${textTable}</td></tr>`;
-  }
+  // Logo always on top; everything below shares its left edge.
+  const main = `<tr><td align="left" valign="top" style="padding:0 0 12px 0;${base}">${logoHtml}</td></tr>` +
+               `<tr><td align="left" valign="top" style="padding:0;${base}">${textTable}</td></tr>`;
   const disc = String(s.disclaimer || '').trim();
-  const cols = s.layout === 'stacked' ? 1 : 2;
-  const discRow = disc ? `<tr><td colspan="${cols}" style="padding:14px 0 0 0;${base}font-size:11px;line-height:15px;color:#8a8a8a;">${esc(disc).replace(/\n/g, '<br>')}</td></tr>` : '';
+  const discRow = disc ? `<tr><td align="left" style="padding:14px 0 0 0;${base}font-size:11px;line-height:15px;color:#8a8a8a;">${esc(disc).replace(/\n/g, '<br>')}</td></tr>` : '';
 
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;${base}">${main}${discRow}</table>`;
 }
@@ -382,7 +381,7 @@ function buildPlain(p, s){
 function warningsFor(p, s, html){
   const w = [];
   const logo = String(s.logoUrl || '').trim();
-  if(!logo) w.push('No logo URL set. The company name is shown as text instead. Add a hosted logo in Brand settings.');
+  if(!logo){ if(!isHosted) w.push('Local preview: the bundled logo only works in sent email once this app is deployed and opened from its web address.'); }
   else if(!/^https:\/\//i.test(logo)) w.push('Logo URL should start with https://. Many clients block images served over plain http.');
   else if(/drive\.google\.com|docs\.google\.com/i.test(logo)) w.push('Google Drive links are not direct image links and usually show as broken images. Host the logo on your website instead.');
   else if(/\.svg(\?|$)/i.test(logo)) w.push('SVG logos are blocked by Gmail and Outlook. Use a PNG.');
@@ -398,12 +397,12 @@ function warningsFor(p, s, html){
 // ---------- logo dimension detection ----------
 let logoState = 'none';
 function detectLogo(){
-  const s = state.settings, u = safeUrl(s.logoUrl), el = $('#logoStatus');
+  const s = state.settings, u = logoSrc(s), el = $('#logoStatus');
   if(!u){ logoState = 'none'; if(el){ el.textContent=''; el.className='status'; } return; }
   logoState = 'loading'; if(el){ el.textContent = 'Checking logo…'; el.className = 'status'; }
   const img = new Image();
   img.onload = () => {
-    if(safeUrl(state.settings.logoUrl) !== u) return;
+    if(logoSrc(state.settings) !== u) return;
     logoState = 'ok';
     s.logoNatural = [img.naturalWidth, img.naturalHeight];
     applyLogoHeight();
@@ -411,7 +410,7 @@ function detectLogo(){
     save(); render();
   };
   img.onerror = () => {
-    if(safeUrl(state.settings.logoUrl) !== u) return;
+    if(logoSrc(state.settings) !== u) return;
     logoState = 'error'; if(el){ el.textContent = 'Could not load this image.'; el.className = 'status bad'; }
     render();
   };
