@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Signature Studio</title>
+<style>
+:root{
+  --bg:#f5f5f4;--panel:#ffffff;--ink:#1c1917;--muted:#78716c;--line:#e7e5e4;
+  --accent:#c2410c;--accent-ink:#ffffff;--warn-bg:#fef3c7;--warn-ink:#92400e;--ok:#15803d;
+  --field:#ffffff;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1c1917;--panel:#292524;--ink:#f5f5f4;--muted:#a8a29e;--line:#44403c;
+    --accent:#fb923c;--accent-ink:#1c1917;--warn-bg:#422006;--warn-ink:#fcd34d;--ok:#4ade80;--field:#1c1917;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1c1917;--panel:#292524;--ink:#f5f5f4;--muted:#a8a29e;--line:#44403c;
+  --accent:#fb923c;--accent-ink:#1c1917;--warn-bg:#422006;--warn-ink:#fcd34d;--ok:#4ade80;--field:#1c1917;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+header h1{font-size:18px;margin:0}
+header span{color:var(--muted)}
+main{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:20px;padding:20px 24px;max-width:1280px;margin:0 auto}
+@media (max-width:860px){main{grid-template-columns:1fr;padding:16px}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.panel + .panel{margin-top:16px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 12px}
+h3{font-size:13px;margin:16px 0 8px}
+.tabs{display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid var(--line)}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 10px;color:var(--muted);font:inherit;cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+label.check{display:flex;gap:8px;align-items:center;color:var(--ink);font-size:13px}
+input[type=text],input[type=url],input[type=tel],input[type=email],input[type=number],select,textarea{
+  width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--field);color:var(--ink);font:inherit}
+textarea{min-height:60px;resize:vertical}
+input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-radius:6px;background:var(--field);padding:2px}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.danger{color:#dc2626}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.people{list-style:none;margin:0 0 12px;padding:0;max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.people li button{width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:9px 12px;color:var(--ink);font:inherit;cursor:pointer}
+.people li:last-child button{border-bottom:0}
+.people li button[aria-current="true"]{background:color-mix(in srgb,var(--accent) 14%,transparent);font-weight:600}
+.people small{display:block;color:var(--muted);font-weight:400}
+.empty{color:var(--muted);padding:12px}
+.hint{font-size:12px;color:var(--muted);margin:4px 0 0}
+.status{font-size:12px;margin-top:4px}
+.status.ok{color:var(--ok)}.status.bad{color:#dc2626}
+.stage{border-radius:8px;padding:28px 24px;overflow:auto;border:1px solid var(--line)}
+.stage.light{background:#ffffff}
+.stage.dark{background:#202124}
+.stage-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{background:none;border:0;padding:5px 10px;color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--line);color:var(--ink)}
+.warnings{list-style:none;padding:0;margin:12px 0 0}
+.warnings li{background:var(--warn-bg);color:var(--warn-ink);padding:8px 10px;border-radius:6px;margin-top:6px;font-size:13px}
+.meter{font-size:12px;color:var(--muted);margin-top:10px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:10}
+.toast.show{opacity:1}
+.howto ol{margin:6px 0 0;padding-left:20px}.howto li{margin:4px 0}
+.howto kbd,.howto code{font:12px ui-monospace,Menlo,monospace;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 4px}
+.employee main{grid-template-columns:1fr;max-width:820px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="appTitle">Signature Studio</h1>
+  <span id="appSub">Email signatures for hellopepper.com</span>
+</header>
+
+<main>
+  <!-- LEFT: editor (hidden in employee view) -->
+  <section id="editor">
+    <div class="panel">
+      <div class="tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-tab="team">Team</button>
+        <button role="tab" aria-selected="false" data-tab="brand">Brand settings</button>
+        <button role="tab" aria-selected="false" data-tab="data">Distribute &amp; backup</button>
+      </div>
+
+      <div data-pane="team">
+        <ul class="people" id="peopleList"></ul>
+        <div class="btns"><button class="btn primary" id="addPerson">+ Add person</button></div>
+        <div id="personForm"></div>
+      </div>
+
+      <div data-pane="brand" class="hidden" id="brandForm">
+        <label>Company name</label>
+        <input type="text" data-k="company">
+        <label>Website</label>
+        <input type="url" data-k="website" placeholder="https://hellopepper.com">
+        <h3>Logo</h3>
+        <label>Logo image URL (public https PNG/JPG)</label>
+        <input type="url" data-k="logoUrl" placeholder="https://hellopepper.com/email/logo.png">
+        <div class="status" id="logoStatus"></div>
+        <p class="hint">Must be a direct, publicly reachable image link. Gmail and Outlook strip embedded/uploaded images and SVGs, and Google Drive share links don't work. Export the logo at 2× the display width for sharp retina rendering.</p>
+        <div class="row">
+          <div><label>Display width (px)</label><input type="number" min="40" max="300" data-k="logoWidth"></div>
+          <div><label>Brand color</label><input type="color" data-k="color"></div>
+        </div>
+        <label>Layout</label>
+        <select data-k="layout">
+          <option value="horizontal">Logo left, details right</option>
+          <option value="stacked">Logo on top</option>
+        </select>
+        <h3>Social channels</h3>
+        <label>Display style</label>
+        <select data-k="socialStyle">
+          <option value="text">Text links (works everywhere)</option>
+          <option value="icons">Icons (requires hosted PNG icons)</option>
+        </select>
+        <div id="iconBaseWrap">
+          <label>Icon folder URL</label>
+          <input type="url" data-k="iconBase" placeholder="https://hellopepper.com/email/icons">
+          <p class="hint">Host 40×40 PNGs named <code>linkedin.png</code>, <code>x.png</code>, <code>instagram.png</code>, <code>facebook.png</code>, <code>youtube.png</code>, <code>tiktok.png</code> in this folder.</p>
+        </div>
+        <p class="hint">Company channels below can be added to anyone's signature with one checkbox.</p>
+        <div id="companySocials"></div>
+        <h3>Footer</h3>
+        <label>Disclaimer / tagline (optional)</label>
+        <textarea data-k="disclaimer"></textarea>
+      </div>
+
+      <div data-pane="data" class="hidden">
+        <h3 style="margin-top:0">Distribute</h3>
+        <p class="hint">Each person gets a personal link that opens only their signature, with a one-click copy button and setup steps for their email app. Links only work once this file is hosted somewhere your team can reach (see notes).</p>
+        <div class="btns" style="margin-top:8px">
+          <button class="btn" id="copyAllLinks">Copy all personal links</button>
+          <button class="btn" id="downloadAll">Download every signature (.htm)</button>
+        </div>
+        <h3>Backup</h3>
+        <div class="btns">
+          <button class="btn" id="exportJson">Export team (.json)</button>
+          <label class="btn" style="margin:0;color:var(--ink);font-size:14px">Import .json<input type="file" id="importJson" accept="application/json" class="hidden"></label>
+        </div>
+        <p class="hint">Data is saved in this browser only. Export a backup before clearing browser data or switching computers.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT: preview + actions + instructions -->
+  <section>
+    <div class="panel">
+      <div class="stage-head">
+        <h2 style="margin:0" id="previewLabel">Preview</h2>
+        <div class="seg" role="group" aria-label="Preview background">
+          <button aria-pressed="true" data-bg="light">Light inbox</button>
+          <button aria-pressed="false" data-bg="dark">Dark mode</button>
+        </div>
+      </div>
+      <div class="stage light" id="stage"><div id="preview"></div></div>
+      <div class="btns" style="margin-top:14px">
+        <button class="btn primary" id="copySig">Copy signature</button>
+        <button class="btn" id="copyHtml">Copy HTML code</button>
+        <button class="btn" id="copyText">Copy plain text</button>
+        <button class="btn" id="downloadHtm">Download .htm</button>
+        <button class="btn" id="shareLink">Copy personal link</button>
+      </div>
+      <div class="meter" id="meter"></div>
+      <ul class="warnings" id="warnings"></ul>
+    </div>
+
+    <div class="panel howto">
+      <h2>Install it</h2>
+      <div class="tabs" role="tablist" id="clientTabs">
+        <button role="tab" aria-selected="true" data-client="gmail">Gmail</button>
+        <button role="tab" aria-selected="false" data-client="outlook">Outlook</button>
+        <button role="tab" aria-selected="false" data-client="outlookClassic">Outlook classic</button>
+        <button role="tab" aria-selected="false" data-client="apple">Apple Mail</button>
+        <button role="tab" aria-selected="false" data-client="mobile">Phone</button>
+      </div>
+      <div data-howto="gmail">
+        <ol>
+          <li>Click <b>Copy signature</b> above.</li>
+          <li>In Gmail on the web, click the gear icon → <b>See all settings</b>.</li>
+          <li>On the <b>General</b> tab, scroll to <b>Signature</b> → <b>Create new</b>, name it (e.g. "Pepper").</li>
+          <li>Click into the box and paste (<kbd>⌘V</kbd> / <kbd>Ctrl+V</kbd>).</li>
+          <li>Under <b>Signature defaults</b>, choose it for <i>new emails</i> and <i>on reply/forward</i>.</li>
+          <li>Scroll to the bottom and click <b>Save Changes</b>.</li>
+        </ol>
+        <p class="hint">If the logo shows as a broken box after pasting, the logo URL isn't public. Fix it in Brand settings and copy again.</p>
+      </div>
+      <div data-howto="outlook" class="hidden">
+        <p class="hint" style="margin-top:0">New Outlook for Windows, Outlook for Mac, and Outlook on the web.</p>
+        <ol>
+          <li>Click <b>Copy signature</b> above.</li>
+          <li>Open <b>Settings</b> (gear) → <b>Accounts</b> → <b>Signatures</b>.</li>
+          <li>Click <b>+ New signature</b>, give it a name, and paste into the editor.</li>
+          <li>Set it as the default for new messages and replies/forwards for your hellopepper.com account.</li>
+          <li>Click <b>Save</b>.</li>
+        </ol>
+      </div>
+      <div data-howto="outlookClassic" class="hidden">
+        <ol>
+          <li>Click <b>Copy signature</b> above.</li>
+          <li>In Outlook: <b>File</b> → <b>Options</b> → <b>Mail</b> → <b>Signatures…</b></li>
+          <li>Click <b>New</b>, name it, then paste into the edit box.</li>
+          <li>On the right, pick your hellopepper.com account and set <i>New messages</i> and <i>Replies/forwards</i>.</li>
+          <li>Click <b>OK</b>.</li>
+        </ol>
+        <p class="hint">Alternative: click <b>Download .htm</b>, quit Outlook, and drop the file into <code>%APPDATA%\Microsoft\Signatures</code>. It then appears in the signature list.</p>
+      </div>
+      <div data-howto="apple" class="hidden">
+        <ol>
+          <li>Click <b>Copy signature</b> above (Safari or Chrome both work).</li>
+          <li>In Mail: <b>Mail</b> menu → <b>Settings…</b> → <b>Signatures</b>.</li>
+          <li>Select your hellopepper.com account in the left column and click <b>+</b>.</li>
+          <li><b>Uncheck</b> "Always match my default message font", or Mail strips the styling.</li>
+          <li>Select the placeholder text in the right-hand box and paste.</li>
+          <li>Choose it in the <b>Choose Signature</b> menu below, then close the window.</li>
+        </ol>
+        <p class="hint">The logo may appear as a "?" in the settings window. It displays correctly in sent mail.</p>
+      </div>
+      <div data-howto="mobile" class="hidden">
+        <h3 style="margin-top:0">Gmail app (iPhone &amp; Android)</h3>
+        <p class="hint">The Gmail app uses your web signature automatically, as long as its own <b>Mobile signature</b> setting is left empty or switched off (Gmail app → Settings → your account → Mobile signature).</p>
+        <h3>iPhone / iPad Mail app</h3>
+        <ol>
+          <li>Open your personal link on the phone and tap <b>Copy signature</b>.</li>
+          <li>Go to <b>Settings</b> → <b>Apps</b> → <b>Mail</b> → <b>Signature</b>.</li>
+          <li>Delete "Sent from my iPhone" and paste.</li>
+        </ol>
+        <p class="hint">iOS sometimes drops formatting on paste. If it looks off, use <b>Copy plain text</b> instead.</p>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+const KEY = 'pepper-signatures.v1';
+const SOCIALS = [['linkedin','LinkedIn'],['x','X'],['instagram','Instagram'],['facebook','Facebook'],['youtube','YouTube'],['tiktok','TikTok']];
+const DEFAULT_SETTINGS = {
+  company:'Pepper', website:'https://hellopepper.com', logoUrl:'', logoWidth:120, logoHeight:0,
+  color:'#c2410c', layout:'horizontal', socialStyle:'text', iconBase:'', companySocials:{}, disclaimer:''
+};
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+// ---------- state ----------
+function load(){
+  try{
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if(s && s.settings) return {settings:{...DEFAULT_SETTINGS, ...s.settings}, people:Array.isArray(s.people)?s.people:[]};
+  }catch(e){}
+  return {settings:{...DEFAULT_SETTINGS, companySocials:{}}, people:[]};
+}
+function save(){ if(employeeMode) return; try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+let state = load();
+let currentId = state.people[0] ? state.people[0].id : null;
+let employeeMode = false;
+
+// ---------- helpers ----------
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function safeUrl(u){
+  u = String(u || '').trim();
+  if(!u) return '';
+  if(!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = 'https://' + u.replace(/^\/+/, '');
+  try{ const p = new URL(u); return (p.protocol === 'https:' || p.protocol === 'http:') ? p.href : ''; }catch(e){ return ''; }
+}
+function telHref(phone){
+  const raw = String(phone || '').trim();
+  let d = raw.replace(/[^\d]/g, '');
+  if(!d) return '';
+  if(raw.startsWith('+')) return 'tel:+' + d;
+  if(d.length === 10) return 'tel:+1' + d;
+  if(d.length === 11 && d[0] === '1') return 'tel:+' + d;
+  return 'tel:' + d;
+}
+const prettyUrl = u => u.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+function newId(){ return Math.random().toString(36).slice(2, 10); }
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200); }
+function b64urlEncode(obj){
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  let bin = ''; bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function b64urlDecode(str){
+  str = str.replace(/-/g,'+').replace(/_/g,'/');
+  const bin = atob(str + '==='.slice((str.length + 3) % 4));
+  return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
+}
+
+function socialsFor(p, s){
+  const out = [];
+  SOCIALS.forEach(([k, label]) => {
+    const own = safeUrl((p.socials || {})[k]);
+    const co = p.includeCompanySocials ? safeUrl((s.companySocials || {})[k]) : '';
+    const url = own || co;
+    if(url) out.push({k, label, url});
+  });
+  return out;
+}
+
+// ---------- signature builder (email-client-safe HTML) ----------
+// Tables + inline styles only; no classes, no <style>, no SVG, no data: URIs.
+function buildSignature(p, s){
+  const FONT = 'Arial,Helvetica,sans-serif';
+  const color = /^#[0-9a-f]{6}$/i.test(s.color) ? s.color : '#c2410c';
+  const site = safeUrl(s.website);
+  const logo = safeUrl(s.logoUrl);
+  const w = Math.max(40, Math.min(300, Number(s.logoWidth) || 120));
+  const h = s.logoHeight ? Math.round(s.logoHeight) : 0;
+  const base = `font-family:${FONT};mso-line-height-rule:exactly;`;
+  const cell = (inner, style) => `<tr><td style="padding:0;${base}${style}">${inner}</td></tr>`;
+
+  // Logo (or text wordmark fallback when no logo is set)
+  let logoHtml;
+  if(logo){
+    const img = `<img src="${esc(logo)}" width="${w}"${h ? ` height="${h}"` : ''} alt="${esc(s.company || 'Logo')}" style="display:block;border:0;outline:none;text-decoration:none;width:${w}px;${h ? `height:${h}px;` : 'height:auto;'}max-width:${w}px;">`;
+    logoHtml = site ? `<a href="${esc(site)}" target="_blank" style="text-decoration:none;">${img}</a>` : img;
+  }else{
+    logoHtml = `<span style="${base}font-size:22px;line-height:26px;font-weight:bold;color:${color};">${esc(s.company || '')}</span>`;
+  }
+
+  // Text block
+  let rows = '';
+  if(p.name)  rows += cell(esc(p.name), 'font-size:16px;line-height:22px;font-weight:bold;color:#1a1a1a;');
+  if(p.title) rows += cell(esc(p.title) + (s.company ? `<span style="color:#9a9a9a;">&nbsp;|&nbsp;</span>${esc(s.company)}` : ''), `font-size:13px;line-height:18px;color:${color};padding-bottom:6px;`);
+  const linkStyle = 'color:#4a4a4a;text-decoration:none;';
+  const tel = telHref(p.phone);
+  if(p.phone) rows += cell(tel ? `<a href="${tel}" style="${linkStyle}">${esc(p.phone)}</a>` : esc(p.phone), 'font-size:13px;line-height:18px;color:#4a4a4a;');
+  if(p.showEmail && p.email) rows += cell(`<a href="mailto:${esc(p.email)}" style="${linkStyle}">${esc(p.email)}</a>`, 'font-size:13px;line-height:18px;color:#4a4a4a;');
+  if(site) rows += cell(`<a href="${esc(site)}" target="_blank" style="${linkStyle}">${esc(prettyUrl(site))}</a>`, 'font-size:13px;line-height:18px;color:#4a4a4a;');
+
+  const socials = socialsFor(p, s);
+  const iconBase = safeUrl(s.iconBase).replace(/\/$/, '');
+  if(socials.length){
+    let inner;
+    if(s.socialStyle === 'icons' && iconBase){
+      inner = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;"><tr>` +
+        socials.map(x => `<td style="padding:0 6px 0 0;"><a href="${esc(x.url)}" target="_blank" style="text-decoration:none;"><img src="${esc(iconBase)}/${x.k}.png" width="20" height="20" alt="${esc(x.label)}" style="display:block;border:0;width:20px;height:20px;"></a></td>`).join('') +
+        `</tr></table>`;
+    }else{
+      inner = socials.map(x => `<a href="${esc(x.url)}" target="_blank" style="color:${color};text-decoration:none;font-weight:bold;">${esc(x.label)}</a>`)
+        .join('<span style="color:#c4c4c4;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>');
+    }
+    rows += cell(inner, 'font-size:12px;line-height:16px;padding-top:8px;');
+  }
+  const textTable = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">${rows}</table>`;
+
+  let main;
+  if(s.layout === 'stacked'){
+    main = `<tr><td style="padding:0 0 12px 0;${base}">${logoHtml}</td></tr>` +
+           `<tr><td style="padding:12px 0 0 0;border-top:2px solid ${color};${base}">${textTable}</td></tr>`;
+  }else{
+    main = `<tr><td valign="middle" style="padding:0 16px 0 0;border-right:2px solid ${color};${base}">${logoHtml}</td>` +
+           `<td valign="middle" style="padding:0 0 0 16px;${base}">${textTable}</td></tr>`;
+  }
+  const disc = String(s.disclaimer || '').trim();
+  const cols = s.layout === 'stacked' ? 1 : 2;
+  const discRow = disc ? `<tr><td colspan="${cols}" style="padding:14px 0 0 0;${base}font-size:11px;line-height:15px;color:#8a8a8a;">${esc(disc).replace(/\n/g, '<br>')}</td></tr>` : '';
+
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;${base}">${main}${discRow}</table>`;
+}
+
+function buildPlain(p, s){
+  const lines = [];
+  if(p.name) lines.push(p.name);
+  if(p.title) lines.push(p.title + (s.company ? ' | ' + s.company : ''));
+  if(p.phone) lines.push(p.phone);
+  if(p.showEmail && p.email) lines.push(p.email);
+  const site = safeUrl(s.website); if(site) lines.push(prettyUrl(site));
+  socialsFor(p, s).forEach(x => lines.push(x.label + ': ' + x.url));
+  if(String(s.disclaimer || '').trim()) lines.push('', s.disclaimer.trim());
+  return lines.join('\n');
+}
+
+function warningsFor(p, s, html){
+  const w = [];
+  const logo = String(s.logoUrl || '').trim();
+  if(!logo) w.push('No logo URL set. The company name is shown as text instead. Add a hosted logo in Brand settings.');
+  else if(!/^https:\/\//i.test(logo)) w.push('Logo URL should start with https://. Many clients block images served over plain http.');
+  else if(/drive\.google\.com|docs\.google\.com/i.test(logo)) w.push('Google Drive links are not direct image links and usually show as broken images. Host the logo on your website instead.');
+  else if(/\.svg(\?|$)/i.test(logo)) w.push('SVG logos are blocked by Gmail and Outlook. Use a PNG.');
+  if(logoState === 'error') w.push('The logo URL could not be loaded from this browser. Check that it is public.');
+  if(!p.name) w.push('Full name is empty.');
+  if(!p.title) w.push('Title is empty.');
+  if(p.phone && telHref(p.phone).replace(/\D/g,'').length < 10) w.push('Phone number looks incomplete.');
+  if(s.socialStyle === 'icons' && !safeUrl(s.iconBase)) w.push('Icon style is selected but no icon folder URL is set, so text links are used.');
+  if(html.length > 10000) w.push('Signature is over Gmail\'s 10,000-character limit. Shorten the disclaimer or remove social links.');
+  return w;
+}
+
+// ---------- logo dimension detection ----------
+let logoState = 'none';
+function detectLogo(){
+  const s = state.settings, u = safeUrl(s.logoUrl), el = $('#logoStatus');
+  if(!u){ logoState = 'none'; if(el){ el.textContent=''; el.className='status'; } return; }
+  logoState = 'loading'; if(el){ el.textContent = 'Checking logo…'; el.className = 'status'; }
+  const img = new Image();
+  img.onload = () => {
+    if(safeUrl(state.settings.logoUrl) !== u) return;
+    logoState = 'ok';
+    s.logoNatural = [img.naturalWidth, img.naturalHeight];
+    applyLogoHeight();
+    if(el){ el.textContent = `Loaded: ${img.naturalWidth}×${img.naturalHeight}px` + (img.naturalWidth < s.logoWidth * 2 ? ' (tip: use a file at least 2× the display width for retina screens)' : ''); el.className = 'status ok'; }
+    save(); render();
+  };
+  img.onerror = () => {
+    if(safeUrl(state.settings.logoUrl) !== u) return;
+    logoState = 'error'; if(el){ el.textContent = 'Could not load this image.'; el.className = 'status bad'; }
+    render();
+  };
+  img.src = u;
+}
+function applyLogoHeight(){
+  const s = state.settings, n = s.logoNatural;
+  s.logoHeight = (n && n[0]) ? Math.round((Number(s.logoWidth) || 120) * n[1] / n[0]) : 0;
+}
+
+// ---------- form binding ----------
+function bindForm(root, obj, onChange){
+  root.querySelectorAll('[data-k]').forEach(el => {
+    const [a, b] = el.dataset.k.split('.');
+    const v = b ? (obj[a] || {})[b] : obj[a];
+    if(el.type === 'checkbox') el.checked = !!v; else el.value = v ?? '';
+    const handler = () => {
+      const val = el.type === 'checkbox' ? el.checked : (el.type === 'number' ? Number(el.value) : el.value);
+      if(b){ obj[a] = obj[a] || {}; obj[a][b] = val; } else obj[a] = val;
+      onChange(el.dataset.k);
+    };
+    el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', handler);
+  });
+}
+
+const socialInputs = prefix => SOCIALS.map(([k, label]) =>
+  `<label>${label} URL</label><input type="url" data-k="${prefix}.${k}" placeholder="https://…">`).join('');
+
+function renderPeople(){
+  const ul = $('#peopleList');
+  if(!state.people.length){ ul.innerHTML = '<li class="empty">No one yet. Add your first person.</li>'; return; }
+  ul.innerHTML = state.people.map(p =>
+    `<li><button data-id="${esc(p.id)}" aria-current="${p.id === currentId}">${esc(p.name || 'Unnamed')}<small>${esc(p.title || '—')}</small></button></li>`).join('');
+  ul.querySelectorAll('button').forEach(b => b.onclick = () => { currentId = b.dataset.id; renderPeople(); renderPersonForm(); render(); });
+}
+
+function renderPersonForm(){
+  const wrap = $('#personForm');
+  const p = currentPerson();
+  if(!p){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `
+    <h3>Details</h3>
+    <label>Full name</label><input type="text" data-k="name" autocomplete="off">
+    <label>Title</label><input type="text" data-k="title" autocomplete="off">
+    <label>Phone</label><input type="tel" data-k="phone" placeholder="(555) 123-4567">
+    <label>Work email</label><input type="email" data-k="email" placeholder="name@hellopepper.com">
+    <label class="check"><input type="checkbox" data-k="showEmail"> Show email in signature</label>
+    <h3>Social channels (optional)</h3>
+    <label class="check"><input type="checkbox" data-k="includeCompanySocials"> Include company social channels</label>
+    <p class="hint">Personal links below override the company link for the same network.</p>
+    ${socialInputs('socials')}
+    <div class="btns" style="margin-top:16px"><button class="btn danger" id="deletePerson">Remove person</button></div>`;
+  bindForm(wrap, p, k => { save(); render(); if(k === 'name' || k === 'title') renderPeople(); });
+  $('#deletePerson').onclick = () => {
+    if(!confirm(`Remove ${p.name || 'this person'}?`)) return;
+    state.people = state.people.filter(x => x.id !== p.id);
+    currentId = state.people[0] ? state.people[0].id : null;
+    save(); renderPeople(); renderPersonForm(); render();
+  };
+}
+
+function renderBrandForm(){
+  const root = $('#brandForm');
+  $('#companySocials').innerHTML = socialInputs('companySocials');
+  bindForm(root, state.settings, k => {
+    if(k === 'logoUrl') detectLogo();
+    if(k === 'logoWidth') applyLogoHeight();
+    if(k === 'socialStyle') toggleIconBase();
+    save(); render();
+  });
+  toggleIconBase();
+}
+function toggleIconBase(){ $('#iconBaseWrap').classList.toggle('hidden', state.settings.socialStyle !== 'icons'); }
+
+const currentPerson = () => state.people.find(p => p.id === currentId) || null;
+const SAMPLE = {name:'Your Name', title:'Your Title', phone:'(555) 123-4567', includeCompanySocials:true, socials:{}};
+
+// ---------- preview ----------
+let lastHtml = '', lastText = '', lastPerson = null;
+function render(){
+  const p = currentPerson() || SAMPLE;
+  lastPerson = p;
+  lastHtml = buildSignature(p, state.settings);
+  lastText = buildPlain(p, state.settings);
+  $('#preview').innerHTML = lastHtml;
+  $('#previewLabel').textContent = currentPerson() || employeeMode ? 'Preview' : 'Preview (sample, add a person)';
+  const n = lastHtml.length;
+  $('#meter').textContent = `${n.toLocaleString()} / 10,000 characters (Gmail limit)`;
+  const w = warningsFor(p, state.settings, lastHtml);
+  $('#warnings').innerHTML = (employeeMode ? w.filter(x => !/Brand settings|icon folder/.test(x)) : w).map(x => `<li>${esc(x)}</li>`).join('');
+}
+
+// ---------- actions ----------
+async function copyRich(){
+  try{
+    await navigator.clipboard.write([new ClipboardItem({
+      'text/html': new Blob([lastHtml], {type:'text/html'}),
+      'text/plain': new Blob([lastText], {type:'text/plain'})
+    })]);
+    return true;
+  }catch(e){
+    const r = document.createRange(); r.selectNodeContents($('#preview'));
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    const ok = document.execCommand('copy'); sel.removeAllRanges(); return ok;
+  }
+}
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); return true; }
+  catch(e){ const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return ok; }
+}
+function htmDoc(html){ return `<!DOCTYPE html>\n<html><head><meta charset="utf-8"><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>${html}</body></html>`; }
+function fileName(p){ return ((p.name || 'signature') + ' - ' + (state.settings.company || 'Signature')).replace(/[\\/:*?"<>|]+/g, '') + '.htm'; }
+function download(name, content, type){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], {type}));
+  a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function personalLink(p){
+  const {id, ...person} = p;
+  const s = {...state.settings}; delete s.logoNatural;
+  return location.href.split('#')[0] + '#s=' + b64urlEncode({p:person, s});
+}
+
+$('#copySig').onclick = async () => toast(await copyRich() ? 'Signature copied. Paste it into your email settings.' : 'Copy failed. Select the preview and copy manually.');
+$('#copyHtml').onclick = async () => toast(await copyText(lastHtml) ? 'HTML code copied' : 'Copy failed');
+$('#copyText').onclick = async () => toast(await copyText(lastText) ? 'Plain text copied' : 'Copy failed');
+$('#downloadHtm').onclick = () => download(fileName(lastPerson), htmDoc(lastHtml), 'text/html');
+$('#shareLink').onclick = async () => {
+  const p = currentPerson(); if(!p) return toast('Add a person first');
+  toast(await copyText(personalLink(p)) ? `Personal link for ${p.name || 'this person'} copied` : 'Copy failed');
+};
+$('#addPerson').onclick = () => {
+  const p = {id:newId(), name:'', title:'', phone:'', email:'', showEmail:false, includeCompanySocials:true, socials:{}};
+  state.people.push(p); currentId = p.id; save(); renderPeople(); renderPersonForm(); render();
+  const f = $('#personForm input'); if(f) f.focus();
+};
+$('#copyAllLinks').onclick = async () => {
+  if(!state.people.length) return toast('No people yet');
+  const lines = state.people.map(p => `${p.name || 'Unnamed'}\t${p.email || ''}\t${personalLink(p)}`);
+  toast(await copyText('Name\tEmail\tSignature link\n' + lines.join('\n')) ? `Copied ${lines.length} links (paste into a spreadsheet)` : 'Copy failed');
+};
+$('#downloadAll').onclick = () => {
+  if(!state.people.length) return toast('No people yet');
+  state.people.forEach((p, i) => setTimeout(() => download(fileName(p), htmDoc(buildSignature(p, state.settings)), 'text/html'), i * 300));
+};
+$('#exportJson').onclick = () => download('pepper-signatures-backup.json', JSON.stringify(state, null, 2), 'application/json');
+$('#importJson').onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  f.text().then(t => {
+    const d = JSON.parse(t);
+    if(!d || !d.settings || !Array.isArray(d.people)) throw new Error('bad file');
+    if(!confirm(`Replace current data with ${d.people.length} people from this file?`)) return;
+    state = {settings:{...DEFAULT_SETTINGS, ...d.settings}, people:d.people.map(p => ({...p, id:p.id || newId()}))};
+    currentId = state.people[0] ? state.people[0].id : null;
+    save(); renderBrandForm(); renderPeople(); renderPersonForm(); detectLogo(); render(); toast('Imported');
+  }).catch(() => toast('That file is not a valid backup')).finally(() => e.target.value = '');
+};
+
+// tabs
+$$('[data-tab]').forEach(b => b.onclick = () => {
+  $$('[data-tab]').forEach(x => x.setAttribute('aria-selected', x === b));
+  $$('[data-pane]').forEach(p => p.classList.toggle('hidden', p.dataset.pane !== b.dataset.tab));
+});
+$$('[data-client]').forEach(b => b.onclick = () => {
+  $$('[data-client]').forEach(x => x.setAttribute('aria-selected', x === b));
+  $$('[data-howto]').forEach(p => p.classList.toggle('hidden', p.dataset.howto !== b.dataset.client));
+});
+$$('[data-bg]').forEach(b => b.onclick = () => {
+  $$('[data-bg]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  $('#stage').className = 'stage ' + b.dataset.bg;
+});
+
+// ---------- boot ----------
+const m = location.hash.match(/^#s=(.+)$/);
+if(m){
+  try{
+    const d = b64urlDecode(m[1]);
+    employeeMode = true;
+    state = {settings:{...DEFAULT_SETTINGS, ...d.s}, people:[{...d.p, id:'me'}]};
+    currentId = 'me';
+    document.body.classList.add('employee');
+    $('#editor').classList.add('hidden');
+    $('#shareLink').classList.add('hidden');
+    $('#appTitle').textContent = 'Your email signature';
+    $('#appSub').textContent = (d.p.name ? d.p.name + ' · ' : '') + 'Copy it, then follow the steps for your email app';
+  }catch(e){ employeeMode = false; }
+}
+if(!employeeMode){ renderBrandForm(); renderPeople(); renderPersonForm(); }
+detectLogo();
+render();
+})();
+</script>
+</body>
+</html>
