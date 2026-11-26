@@ -331,7 +331,7 @@ function buildSignature(p, s){
   // Text block
   let rows = '';
   if(p.name)  rows += cell(esc(p.name), 'font-size:16px;line-height:22px;font-weight:bold;color:#1a1a1a;');
-  if(p.title) rows += cell(esc(p.title) + (s.company ? `<span style="color:#9a9a9a;">&nbsp;|&nbsp;</span>${esc(s.company)}` : ''), `font-size:13px;line-height:18px;color:${color};padding-bottom:6px;`);
+  if(p.title) rows += cell(esc(p.title), `font-size:13px;line-height:18px;color:${color};padding-bottom:6px;`);
   const linkStyle = 'color:#4a4a4a;text-decoration:none;';
   const tel = telHref(p.phone);
   if(p.phone) rows += cell(tel ? `<a href="${tel}" style="${linkStyle}">${esc(p.phone)}</a>` : esc(p.phone), 'font-size:13px;line-height:18px;color:#4a4a4a;');
@@ -371,7 +371,7 @@ function buildSignature(p, s){
 function buildPlain(p, s){
   const lines = [];
   if(p.name) lines.push(p.name);
-  if(p.title) lines.push(p.title + (s.company ? ' | ' + s.company : ''));
+  if(p.title) lines.push(p.title);
   if(p.phone) lines.push(p.phone);
   if(p.showEmail && p.email) lines.push(p.email);
   const site = safeUrl(s.website); if(site) lines.push(prettyUrl(site));
