@@ -11,4 +11,4 @@ A single-page tool for creating and handing out email signatures for hellopepper
 The hello pepper logo ships in `assets/logo.png` (on a white background so it stays readable in dark-mode inboxes; the transparent original is `assets/logo-transparent.png`). The app points signatures at it automatically once deployed. A custom logo must be a public **https PNG**: Gmail and Outlook strip SVGs, embedded images and Google Drive links.
 
 ## Deploy
-Hosted on Vercel as a static site, with automatic deploys from `main`.
+Hosted on Vercel (team `hello-pepper`, project `email-signature-creator`) at https://email-signature-creator-weld.vercel.app. Every push to `main` deploys to production automatically; other branches get preview URLs.
