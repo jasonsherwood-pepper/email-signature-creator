@@ -1,14 +1,30 @@
 # Pepper Signature Studio
 
-A single-page tool for creating and handing out email signatures for hellopepper.com (Google Workspace).
+Creates and hands out email signatures for hello pepper staff (hellopepper.com, Google Workspace).
 
-- `index.html` is the whole app: plain HTML and JS, no build step.
-- The team roster is saved in the admin's browser (localStorage). Use **Distribute & backup → Export team** to keep a JSON backup.
-- Each person's **personal link** carries their details in the URL fragment (`#s=…`). The fragment never reaches the server, so nobody's data is stored on Vercel.
-- Signatures use tables and inline styles only, so they render the same in Gmail, Outlook (new, classic and web), Apple Mail and iOS Mail.
+Live: https://email-signature-creator-weld.vercel.app — Vercel team `hello-pepper`, project `email-signature-creator`. Every push to `main` deploys to production.
 
-## Logo and icons
-The hello pepper logo ships in `assets/logo.png` (400×69, transparent; `assets/logo-transparent.png` is the same file). Each signature sits in a white card with generous padding, so the logo and text stay on white in dark-mode inboxes. The app points signatures at the hosted logo automatically once deployed. A custom logo must be a public **https PNG**: Gmail and Outlook strip SVGs, embedded images and Google Drive links.
+## How it works
+- `web/index.html` — the whole UI (admin page and each person's signature page). No build step.
+- `api/` — Vercel Functions. `lib/` — shared server code (database, auth, validation).
+- **Data** lives in Neon Postgres (Vercel Marketplace resource `pepper-signatures`): tables `sig_settings` (brand settings) and `sig_people` (one row per person, details in JSONB). Tables are created automatically on first request.
+- **Admins** sign in with Google. The server verifies the Google ID token, requires a verified `@hellopepper.com` account listed in `ADMIN_EMAILS`, then sets a 12-hour signed session cookie.
+- **Personal links** are `/s/<id>`. The id is random and unguessable; the page always shows the latest saved details. Work email is only returned if it's shown in the signature.
+- Signatures use tables and inline styles only, inside a white padded card, with Instrument Sans falling back to Arial.
 
-## Deploy
-Hosted on Vercel (team `hello-pepper`, project `email-signature-creator`) at https://email-signature-creator-weld.vercel.app. Every push to `main` deploys to production automatically; other branches get preview URLs.
+## Environment variables (Vercel)
+| Name | Purpose |
+|---|---|
+| `DATABASE_URL` | Set by the Neon integration |
+| `GOOGLE_CLIENT_ID` | Google OAuth web client (Internal app). Authorized JavaScript origin: the production URL |
+| `ADMIN_EMAILS` | Comma-separated admin emails |
+| `SESSION_SECRET` | Random 32+ character secret that signs session cookies |
+| `ALLOWED_DOMAIN` | Optional, defaults to `hellopepper.com` |
+
+To add an admin: edit `ADMIN_EMAILS` in the Vercel project settings (all environments), then redeploy.
+
+## Local development
+`vercel env pull --yes` then `vercel dev`. Google sign-in only works on origins registered in the Google client, so add `http://localhost:3000` there if you need to sign in locally. Note: local dev uses the same database as production.
+
+## Logo
+`web/assets/logo.png` (400×69, transparent), shown at 160px wide. A custom logo URL must be a public https PNG.

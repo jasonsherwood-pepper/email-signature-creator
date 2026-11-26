@@ -329,7 +329,7 @@ function safeUrl(u){
 const isHosted = /^https?:$/.test(location.protocol);
 function logoSrc(s){
   if(String(s.logoUrl || '').trim()) return safeUrl(s.logoUrl);
-  return new URL('assets/logo.png', location.href).href;
+  return new URL('/assets/logo.png', location.origin).href;
 }
 function telHref(phone){
   const raw = String(phone || '').trim();
