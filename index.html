@@ -109,6 +109,8 @@ input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-rad
           <div><label>Display width (px)</label><input type="number" min="40" max="300" data-k="logoWidth"></div>
           <div><label>Brand color</label><input type="color" data-k="color"></div>
         </div>
+        <h3>Font</h3>
+        <p class="hint" style="margin-top:0">Signatures use <b>Instrument Sans</b> with Arial as the fallback. Email can't load web fonts, so recipients only see Instrument Sans if it's installed on their device. Everyone else, including most Gmail readers, sees Arial. Install it on team computers from fonts.google.com.</p>
         <h3>Social channels</h3>
         <label>Display style</label>
         <select data-k="socialStyle">
@@ -310,7 +312,7 @@ function socialsFor(p, s){
 // ---------- signature builder (email-client-safe HTML) ----------
 // Tables + inline styles only; no classes, no <style>, no SVG, no data: URIs.
 function buildSignature(p, s){
-  const FONT = 'Arial,Helvetica,sans-serif';
+  const FONT = "'Instrument Sans',Arial,Helvetica,sans-serif";
   const color = /^#[0-9a-f]{6}$/i.test(s.color) ? s.color : '#bc6045';
   const site = safeUrl(s.website);
   const logo = logoSrc(s);
