@@ -58,9 +58,6 @@ input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-rad
 .stage{border-radius:8px;padding:28px 24px;overflow:auto;border:1px solid var(--line)}
 .stage.light{background:#ffffff}
 .stage.dark{background:#202124}
-/* Approximates how dark-mode clients recolor text but leave images untouched */
-.stage.dark #preview{filter:invert(1) hue-rotate(180deg)}
-.stage.dark #preview img{filter:invert(1) hue-rotate(180deg)}
 .stage-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .seg button{background:none;border:0;padding:5px 10px;color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
@@ -363,7 +360,12 @@ function buildSignature(p, s){
   const disc = String(s.disclaimer || '').trim();
   const discRow = disc ? `<tr><td align="left" style="padding:14px 0 0 0;${base}font-size:11px;line-height:15px;color:#8a8a8a;">${esc(disc).replace(/\n/g, '<br>')}</td></tr>` : '';
 
-  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;${base}">${main}${discRow}</table>`;
+  const inner = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;${base}">${main}${discRow}</table>`;
+  // White card with generous padding: keeps the signature (and the dark "hello" in the logo)
+  // on white even inside dark-mode inboxes. bgcolor attribute + inline style for Outlook/Gmail.
+  const card = 'background-color:#ffffff;border-radius:8px;';
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="#ffffff" style="border-collapse:separate;${card}${base}">` +
+         `<tr><td bgcolor="#ffffff" style="padding:28px 32px;${card}${base}">${inner}</td></tr></table>`;
 }
 
 function buildPlain(p, s){

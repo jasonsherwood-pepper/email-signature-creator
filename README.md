@@ -8,7 +8,7 @@ A single-page tool for creating and handing out email signatures for hellopepper
 - Signatures use tables and inline styles only, so they render the same in Gmail, Outlook (new, classic and web), Apple Mail and iOS Mail.
 
 ## Logo and icons
-The hello pepper logo ships in `assets/logo.png` (on a white background so it stays readable in dark-mode inboxes; the transparent original is `assets/logo-transparent.png`). The app points signatures at it automatically once deployed. A custom logo must be a public **https PNG**: Gmail and Outlook strip SVGs, embedded images and Google Drive links.
+The hello pepper logo ships in `assets/logo.png` (400×69, transparent; `assets/logo-transparent.png` is the same file). Each signature sits in a white card with generous padding, so the logo and text stay on white in dark-mode inboxes. The app points signatures at the hosted logo automatically once deployed. A custom logo must be a public **https PNG**: Gmail and Outlook strip SVGs, embedded images and Google Drive links.
 
 ## Deploy
 Hosted on Vercel (team `hello-pepper`, project `email-signature-creator`) at https://email-signature-creator-weld.vercel.app. Every push to `main` deploys to production automatically; other branches get preview URLs.
