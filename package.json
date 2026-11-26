@@ -1,0 +1,13 @@
+{
+  "name": "email-signature-creator",
+  "private": true,
+  "type": "module",
+  "description": "hello pepper email signature manager: static page in web/, API in api/, Neon Postgres, Google sign-in for admins",
+  "scripts": {
+    "dev": "vercel dev --listen 4321"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "jose": "^6.1.0"
+  }
+}
