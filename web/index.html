@@ -384,11 +384,17 @@ function buildSignature(p, s){
   let rows = '';
   if(p.name)  rows += cell(esc(p.name), 'font-size:16px;line-height:22px;font-weight:bold;color:#1a1a1a;');
   if(p.title) rows += cell(esc(p.title), `font-size:13px;line-height:18px;color:${color};padding-bottom:6px;`);
-  const linkStyle = 'color:#4a4a4a;text-decoration:none;';
+  // Clickable but visually unchanged: color + no underline on the <a> AND an inner <span>,
+  // because Outlook/Gmail sometimes restyle the <a> itself (blue + underline).
+  const link = (href, text, c, extra = '') => {
+    const st = `color:${c};text-decoration:none;${extra}`;
+    return `<a href="${esc(href)}" target="_blank" style="${st}"><span style="${st}">${text}</span></a>`;
+  };
+  const GREY = '#4a4a4a';
   const tel = telHref(p.phone);
-  if(p.phone) rows += cell(tel ? `<a href="${tel}" style="${linkStyle}">${esc(p.phone)}</a>` : esc(p.phone), 'font-size:13px;line-height:18px;color:#4a4a4a;');
-  if(p.showEmail && p.email) rows += cell(`<a href="mailto:${esc(p.email)}" style="${linkStyle}">${esc(p.email)}</a>`, 'font-size:13px;line-height:18px;color:#4a4a4a;');
-  if(site) rows += cell(`<a href="${esc(site)}" target="_blank" style="${linkStyle}">${esc(prettyUrl(site))}</a>`, 'font-size:13px;line-height:18px;color:#4a4a4a;');
+  if(p.phone) rows += cell(tel ? link(tel, esc(p.phone), GREY) : esc(p.phone), 'font-size:13px;line-height:18px;color:#4a4a4a;');
+  if(p.showEmail && p.email) rows += cell(link('mailto:' + p.email, esc(p.email), GREY), 'font-size:13px;line-height:18px;color:#4a4a4a;');
+  if(site) rows += cell(link(site, esc(prettyUrl(site)), GREY), 'font-size:13px;line-height:18px;color:#4a4a4a;');
 
   const socials = socialsFor(p, s);
   const iconBase = safeUrl(s.iconBase).replace(/\/$/, '');
@@ -399,7 +405,7 @@ function buildSignature(p, s){
         socials.map(x => `<td style="padding:0 6px 0 0;"><a href="${esc(x.url)}" target="_blank" style="text-decoration:none;"><img src="${esc(iconBase)}/${x.k}.png" width="20" height="20" alt="${esc(x.label)}" style="display:block;border:0;width:20px;height:20px;"></a></td>`).join('') +
         `</tr></table>`;
     }else{
-      inner = socials.map(x => `<a href="${esc(x.url)}" target="_blank" style="color:${color};text-decoration:none;font-weight:bold;">${esc(x.label)}</a>`)
+      inner = socials.map(x => link(x.url, esc(x.label), color, 'font-weight:bold;'))
         .join('<span style="color:#c4c4c4;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>');
     }
     rows += cell(inner, 'font-size:12px;line-height:16px;padding-top:8px;');
